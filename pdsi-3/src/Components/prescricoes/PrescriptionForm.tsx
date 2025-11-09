@@ -201,9 +201,7 @@ const PrescriptionForm: React.FC = () => {
       });
 
       if (result.isConfirmed) {
-        // Baixar PDF
-        handleDownloadPDF();
-        // limpar o formulário para nova prescrição
+        await handleDownloadPDF(); // <-- AGORA espera terminar
         setFormData({
           patientId: "",
           patientName: "",
@@ -266,39 +264,22 @@ const PrescriptionForm: React.FC = () => {
 
   // Exportar PDF
   // Exportar PDF
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     const element = document.getElementById("prescription-content");
     if (!element) return;
 
-    // Ajustes CSS temporários para impressão
-    const medicationCards = element.querySelectorAll(".medication-card");
-    medicationCards.forEach((card) => {
-      (card as HTMLElement).style.pageBreakInside = "avoid";
-    });
+    await new Promise((resolve) => setTimeout(resolve, 100)); // pequena pausa
 
-    html2pdf()
+    return html2pdf()
       .set({
-        margin: [10, 10, 10, 10], // margens em mm
+        margin: [10, 10, 10, 10],
         filename: `${formData.patientName}_prescricao.pdf`,
         image: { type: "jpeg", quality: 1 },
-        html2canvas: {
-          scale: 3,
-          scrollY: -window.scrollY,
-          ignoreElements: (el: HTMLElement) =>
-            el.classList.contains("btn-add") ||
-            el.classList.contains("btn-remove") ||
-            el.classList.contains("autocomplete-list"),
-        },
+        html2canvas: { scale: 3, scrollY: -window.scrollY },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       })
       .from(element)
-      .save()
-      .finally(() => {
-        // Remove os estilos temporários para não impactar a tela
-        medicationCards.forEach((card) => {
-          (card as HTMLElement).style.pageBreakInside = "";
-        });
-      });
+      .save();
   };
 
   // Exportar DOCX
