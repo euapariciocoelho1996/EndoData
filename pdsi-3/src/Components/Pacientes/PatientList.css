@@ -1,0 +1,172 @@
+/* Container principal da página */
+.patients-container {
+  padding: 0; /* Ajustado para 0, já que main-content já deve ter padding */
+  width: 100%;
+}
+
+.patients-container h2 {
+  text-align: left;
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem; /* 28px */
+  font-weight: 700;
+  color: var(--text-primary); /* Use suas variáveis CSS */
+}
+
+/* --- Caixa de Busca --- */
+.search-box {
+  position: relative;
+  width: 100%;
+  max-width: 600px; /* Limita a largura */
+  margin-bottom: 2rem;
+}
+
+.search-box .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary); /* Cor do ícone */
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem; /* 12px 16px 12px 44px */
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  font-size: 0.95rem; /* 15px */
+  transition: 0.2s;
+  background-color: var(--bg-white);
+  color: var(--text-primary);
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13);
+}
+
+/* --- Grid de Pacientes --- */
+.patients-grid {
+  display: grid;
+  /* Força 2 colunas como na imagem */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+/* Responsivo: 1 coluna em telas pequenas */
+@media (max-width: 768px) {
+  .patients-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Card do Paciente --- */
+.patient-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem; /* Espaço entre avatar e infos */
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: var(--bg-light-gray); /* Cor de fundo do card */
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.patient-card:hover {
+  transform: translateY(-3px);
+  background: var(--bg-white);
+  border-color: var(--border-medium);
+}
+
+/* Avatar com Iniciais */
+.patient-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary-blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  flex-shrink: 0; /* Impede que o avatar encolha */
+}
+
+.patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem; /* Espaço entre os textos */
+}
+
+.patient-name {
+  font-size: 1.15rem; /* 18px */
+  font-weight: 600;
+  color: var(--primary-blue);
+  margin: 0;
+}
+
+.patient-detail {
+  font-size: 0.9rem; /* 14px */
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Espaço entre ícone e texto */
+}
+
+.patient-detail .detail-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+}
+
+/* --- Textos de Feedback --- */
+.no-results,
+.loading-text {
+  text-align: center;
+  margin-top: 2.5rem;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+/* --- Paginação --- */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2.5rem;
+}
+
+.pagination button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-white);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: var(--bg-light-gray);
+}
+
+.pagination button:disabled {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Botão da página ativa */
+.pagination button.active {
+  background-color: var(--primary-blue);
+  color: #fff;
+  border-color: var(--primary-blue);
+  font-weight: 600;
+}

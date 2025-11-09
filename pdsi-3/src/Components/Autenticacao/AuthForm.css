@@ -1,0 +1,329 @@
+/* Reset básico (evita margens do browser que causam deslocamento) */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* --- Variáveis de Cor --- */
+:root {
+  --primary-blue: #2563eb;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --bg-dark: #1f2937;
+  --input-bg: #374151;
+  --input-border: #4b5563;
+  --input-text: #f9fafb;
+}
+
+/* --- Layout Principal (Grid de 2 Colunas) --- */
+.auth-container {
+  display: grid;
+
+  /* esquerda: mínimo 320px, preferido 480px; direita ocupa o resto */
+  grid-template-columns: minmax(320px, 480px) 1fr;
+
+  /* garante que o grid ocupe a altura inteira do viewport */
+  min-height: 100vh;
+
+  /* tipografia */
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  /* faz o grid ocupar 100% da largura até um max; centraliza com margin auto */
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto; /* <- centraliza o grid no viewport */
+  padding: 0 1rem;
+
+  /* reforça centralização do conteúdo do grid quando houver espaço sobrando */
+  justify-content: center;
+  place-items: stretch;
+}
+
+/* --- Painel Esquerdo (Formulário) --- */
+.auth-panel-left {
+  display: flex;
+  justify-content: center; /* centraliza o card horizontalmente dentro da coluna */
+  align-items: center; /* centraliza verticalmente */
+  background-color: #ffffff;
+  padding: 2.5rem;
+  box-sizing: border-box;
+}
+
+/* --- Painel Direito (escuro) --- */
+.auth-panel-right {
+  background-color: var(--bg-dark);
+  min-height: 100vh;
+}
+
+/* --- Card do Formulário --- */
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  text-align: left;
+}
+
+/* Logo */
+.auth-logo {
+  margin-bottom: 1.5rem;
+}
+.auth-logo svg path {
+  stroke: var(--primary-blue);
+  stroke-width: 2.5;
+}
+
+/* Títulos */
+.auth-card h2 {
+  font-size: 1.75rem;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+.auth-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+/* Mensagem de erro */
+.auth-error {
+  color: #dc2626;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* Form */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Inputs - estilo escuro */
+.input-group input {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  box-sizing: border-box;
+}
+.input-group input::placeholder {
+  color: var(--text-secondary);
+}
+.input-group input:focus {
+  border-color: var(--primary-blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13);
+}
+
+/* Link Esqueceu a senha */
+.forgot-password {
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+/* Botão */
+.auth-button {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 0.9rem;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+.auth-button:hover {
+  background-color: #1d4ed8;
+}
+
+/* Troca Login/Criar Conta */
+.auth-toggle {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.auth-toggle a {
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth-toggle a:hover {
+  text-decoration: underline;
+}
+
+/* --- Responsividade (mobile) --- */
+@media (max-width: 673px) {
+  .auth-container {
+    grid-template-columns: 1fr; /* formulário ocupa 100% */
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .auth-panel-right {
+    display: none; /* esconde a imagem */
+  }
+
+  .auth-panel-left {
+    padding: 2rem 0.75rem;
+  }
+}
+
+.auth-panel-right {
+  background-color: var(--bg-dark);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.auth-side-image {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.95;
+}
+
+.auth-panel-right {
+  background: url("../../assets/login1.png") center center no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Media query final para garantir que o painel direito seja ocultado
+   em telas menores (sobrescreve declarações anteriores). */
+@media (max-width: 673px) {
+  .auth-panel-right {
+    display: none;
+  }
+}
+
+.auth-panel-right {
+  position: relative; /* necessário para posicionar o texto dentro */
+  background: url("../../assets/login1.png") center center no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-panel-text {
+  position: absolute; /* sobre a imagem */
+  color: white; /* contraste com a imagem */
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  max-width: 80%;
+  padding: 1rem;
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.4
+  ); /* leve fundo escuro para melhor leitura */
+  border-radius: 8px;
+}
+.auth-panel-right {
+  position: relative;
+  background: url("../../assets/login1.png") center center no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.carousel {
+  position: relative;
+  width: 80%;
+  max-width: 400px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.carousel-track {
+  display: flex;
+  animation: slide 16s infinite;
+}
+
+.carousel-item {
+  min-width: 100%;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 1rem;
+  background-color: rgba(25, 71, 157, 0.5);
+  box-sizing: border-box;
+  border-radius: 10px;
+}
+
+/* Animação simples para trocar slides */
+@keyframes slide {
+  0% {
+    transform: translateX(0%);
+  }
+  20% {
+    transform: translateX(0%);
+  }
+  25% {
+    transform: translateX(-100%);
+  }
+  45% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(-200%);
+  }
+  70% {
+    transform: translateX(-200%);
+  }
+  75% {
+    transform: translateX(-300%);
+  }
+  95% {
+    transform: translateX(-300%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 673px) {
+  .auth-panel-right {
+    display: none; /* opcional: esconder em telas pequenas */
+  }
+  .carousel-item {
+    font-size: 1rem;
+  }
+}

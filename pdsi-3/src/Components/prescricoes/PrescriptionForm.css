@@ -1,0 +1,361 @@
+/* Container principal */
+.prescription-container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+#prescription-content .medication-card,
+#prescription-content .doctor-info,
+#prescription-content .signature-area {
+  page-break-inside: avoid;
+}
+
+.prescription-container h2 {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.prescription-form {
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+/* Autocomplete de pacientes */
+.autocomplete {
+  position: relative;
+}
+
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  margin-top: 0.25rem;
+}
+
+.autocomplete-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+}
+
+.autocomplete-item:hover {
+  background-color: var(--primary-blue);
+  color: white;
+  border-radius: 6px;
+}
+
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  margin-top: 0.25rem;
+
+  /* Transição suave */
+  opacity: 1;
+  transition: opacity 0.2s ease, max-height 0.2s ease;
+}
+
+.autocomplete-list.hidden {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+}
+
+.autocomplete-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+  position: relative;
+  list-style: none; /* Remove o marcador padrão */
+}
+
+/* Adiciona um símbolo antes do nome */
+.autocomplete-item::before {
+  content: "➤"; /*trocar por "✦", "•", "+", "→", etc */
+  color: var(--primary-blue);
+  font-weight: bold;
+  display: inline-block;
+  width: 1.2em; /* espaço para o símbolo */
+  margin-right: 0.5rem;
+}
+
+/* Sugestões (usado pelo input de pacientes) */
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  z-index: 20;
+  margin-top: 0.35rem;
+}
+
+.suggestion-item {
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.suggestion-item:hover {
+  background-color: var(--primary-blue);
+  color: white;
+}
+
+/* Cabeçalho da prescrição */
+.prescription-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--border-light);
+}
+
+.doctor-info strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.doctor-phone {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.doctor-title {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.signature-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.signature-label {
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.signature-box {
+  width: 260px;
+  height: 56px;
+  border: 2px solid var(--border-light);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), transparent);
+}
+
+/* Seção de medicamentos */
+.medications-section {
+  margin: 2rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.medications-section h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Card de medicamento */
+.medication-card {
+  background-color: var(--bg-light);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: transform 0.15s ease;
+}
+
+.medication-card:hover {
+  transform: translateY(-2px);
+}
+
+.medication-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.medication-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* Grid para campos do medicamento */
+.medication-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .medication-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Campos do formulário */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 90%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Botões */
+.btn-add {
+  background-color: transparent;
+  color: var(--primary-blue);
+  border: 2px dashed var(--primary-blue);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  width: 100%;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 1rem;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.btn-add:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-remove {
+  background-color: transparent;
+  color: #dc2626;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-remove:hover {
+  background-color: #fee2e2;
+}
+
+/* Botões de ação */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-secondary {
+  background-color: var(--bg-light);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.btn-secondary:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Mensagem de erro */
+.error-message {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}

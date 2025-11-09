@@ -1,0 +1,68 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Bloqueia qualquer acesso por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Regras da coleção de médicos
+    match /doctors/{doctorId} {
+      // Ler: somente o próprio médico
+      allow get: if request.auth != null && request.auth.uid == doctorId;
+      // NÃO precisa de 'allow list' aqui, médicos não listam outros médicos
+      
+      allow create: if request.auth != null && request.auth.uid == doctorId;
+      allow update: if request.auth != null && request.auth.uid == doctorId;
+    }
+
+    // --- REGRAS DE PACIENTES CORRIGIDAS ---
+    match /patients/{patientId} {
+      // GET: Permite ler um ÚNICO paciente se o doctorId corresponder
+      allow get: if request.auth != null &&
+                   resource.data.doctorId == request.auth.uid;
+
+      // CUD: Suas regras de criar, atualizar e deletar estão CORRETAS
+      allow create: if request.auth != null &&
+                      request.resource.data.doctorId == request.auth.uid;
+      allow update: if request.auth != null &&
+                      resource.data.doctorId == request.auth.uid &&
+                      request.resource.data.doctorId == resource.data.doctorId;
+      allow delete: if request.auth != null &&
+                      resource.data.doctorId == request.auth.uid;
+    }
+    
+    // REGRA ADICIONAL para permitir LISTAR (Consultar)
+    match /patients/{patientId} {
+      // LIST: Permite que um usuário autenticado liste apenas seus próprios pacientes
+      allow list: if request.auth != null && 
+                    request.query.where[0][0] == 'doctorId' && 
+                    request.query.where[0][1] == '==' && 
+                    request.query.where[0][2] == request.auth.uid;
+
+
+    // --- REGRAS DE PRESCRIÇÕES CORRIGIDAS ---
+    match /prescriptions/{prescriptionId} {
+      // GET: Permite ler uma ÚNICA prescrição
+      allow get: if request.auth != null &&
+                   resource.data.doctorId == request.auth.uid;
+      
+      // CUD: Suas regras de criar, atualizar e deletar estão CORRETAS
+      allow create: if request.auth != null &&
+                      request.resource.data.doctorId == request.auth.uid;
+      allow update: if request.auth != null &&
+                      resource.data.doctorId == request.auth.uid;
+      allow delete: if request.auth != null &&
+                      resource.data.doctorId == request.auth.uid;
+    }
+
+    // REGRA ADICIONAL para permitir LISTAR (Consultar)
+    match /prescriptions {
+      // LIST: Permite que um usuário autenticado consulte a coleção
+      allow list: if request.auth != null;
+    }
+
+  }
+}
