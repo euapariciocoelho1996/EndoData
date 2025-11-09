@@ -19,10 +19,9 @@ import Sidebar from "../Navegacao/Sidebar";
 const quickActions = [
   { icon: Users, label: "Paciente", path: "/PatientList" },
   { icon: FileText, label: "Prescrição", path: "/new-prescription" },
-  { icon: BookMarked, label: "Receita", path: "/new-recipe" },
+  { icon: BookMarked, label: "Receitas", path: "/new-recipe" },
   { icon: Calculator, label: "Calcular IMC", path: "/imc" },
   { icon: Calculator, label: "Calcular M. Basal", path: "/metabolismo-basal" },
-  { icon: BookMarked, label: "Receitas", path: "/receitas" },
 ];
 
 const mainNavCards = [

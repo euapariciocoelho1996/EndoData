@@ -780,11 +780,44 @@ const RecipeForm: React.FC = () => {
             <div className="form-actions">
               <button
                 type="button"
-                onClick={() => navigate("/recipes")}
+                onClick={() => {
+                  setFormData({
+                    patientId: "",
+                    patientName: "",
+                    patientAddress: "",
+                    medications: [
+                      {
+                        name: "",
+                        concentration: "",
+                        quantity: "",
+                        dosage: "",
+                        frequency: "",
+                        duration: "",
+                        useInstructions: "",
+                      },
+                    ],
+                    specialInstructions: "",
+                    isControlled: false,
+                    validityDays: 30,
+                    pharmacistName: "",
+                    pharmacistSignatureDate: "",
+                    issueDate: new Date().toISOString().split("T")[0],
+                  });
+
+                  setSearchTerm("");
+
+                  Swal.fire({
+                    icon: "info",
+                    title: "Campos limpos",
+                    text: "Todos os campos do formulário foram redefinidos.",
+                    confirmButtonText: "Ok",
+                  });
+                }}
                 className="btn-secondary"
               >
                 Cancelar
               </button>
+
               <button
                 type="submit"
                 className="btn-primary"
