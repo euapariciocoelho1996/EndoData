@@ -41,6 +41,7 @@ type PrescriptionData = {
 };
 
 const PrescriptionForm: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -577,11 +578,35 @@ const PrescriptionForm: React.FC = () => {
             <div className="form-actions">
               <button
                 type="button"
-                onClick={() => navigate("/prescriptions")}
+                onClick={() => {
+                  setFormData({
+                    patientId: "",
+                    patientName: "",
+                    medications: [
+                      {
+                        name: "",
+                        dosage: "",
+                        frequency: "",
+                        duration: "",
+                        instructions: "",
+                      },
+                    ],
+                    observations: "",
+                  });
+                  setSearchTerm("");
+
+                  Swal.fire({
+                    icon: "info",
+                    title: "Campos limpos",
+                    text: "Todos os campos foram redefinidos.",
+                    confirmButtonText: "Ok",
+                  });
+                }}
                 className="btn-secondary"
               >
                 Cancelar
               </button>
+
               <button
                 type="submit"
                 className="btn-primary"
