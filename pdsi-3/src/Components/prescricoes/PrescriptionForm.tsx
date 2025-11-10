@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { db, auth } from "../../firebase";
 import {
   collection,
@@ -42,7 +42,6 @@ type PrescriptionData = {
 
 const PrescriptionForm: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _navigate = useNavigate();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
