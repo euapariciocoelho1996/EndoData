@@ -282,9 +282,17 @@ body {
   font-weight: 600;
   text-align: center;
   padding: 1rem;
-  background-color: rgba(25, 71, 157, 0.5);
+
   box-sizing: border-box;
   border-radius: 10px;
+}
+
+.auth-panel-right::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.288); /* Leve escuridão para facilitar leitura */
+  backdrop-filter: blur(2px); /* (opcional) deixa elegante */
 }
 
 /* Animação simples para trocar slides */
