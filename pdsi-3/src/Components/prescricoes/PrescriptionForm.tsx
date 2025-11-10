@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-
 import { db, auth } from "../../firebase";
 import {
   collection,
@@ -10,16 +9,28 @@ import {
   getDocs,
   doc as firestoreDoc,
   getDoc,
+  // Se quiser ordenar as clínicas, descomente e use no query
+  // orderBy,
 } from "firebase/firestore";
 import Header from "../Navegacao/Header";
 import Sidebar from "../Navegacao/Sidebar";
 import "./PrescriptionForm.css";
 
+// Utilitários de exportação
 import html2pdf from "html2pdf.js";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { saveAs } from "file-saver";
 import Swal from "sweetalert2";
 
+// --- 1. INTERFACE PARA CLÍNICAS ---
+type Clinic = {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+};
+
+// --- INTERFACE PARA PACIENTE ---
 type Patient = {
   id: string;
   name: string;
@@ -27,9 +38,19 @@ type Patient = {
   cpf?: string;
 };
 
+// --- 2. TIPO DE DADOS DA PRESCRIÇÃO ATUALIZADO ---
 type PrescriptionData = {
   patientId: string;
   patientName: string;
+
+  // Novos campos para o local
+  clinicId: string;
+  clinicInfo?: {
+    name: string;
+    address: string;
+    phone: string;
+  };
+
   medications: {
     name: string;
     dosage: string;
@@ -41,31 +62,46 @@ type PrescriptionData = {
 };
 
 const PrescriptionForm: React.FC = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-
+  // States de controle
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // States de dados
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [clinics, setClinics] = useState<Clinic[]>([]); // <-- NOVO STATE
+
+  // States do Doutor
   const [doctorName, setDoctorName] = useState<string>("");
   const [doctorCrm, setDoctorCrm] = useState<string>("");
   const [doctorCrmUf, setDoctorCrmUf] = useState<string>("");
   const [doctorPhone, setDoctorPhone] = useState<string>("");
+
+  // States do formulário
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [formData, setFormData] = useState<PrescriptionData>({
+  // --- 4. ESTADO INICIAL DO FORM ATUALIZADO ---
+  const getInitialFormData = (): PrescriptionData => ({
     patientId: "",
     patientName: "",
+    clinicId: "", // Resetado
+    clinicInfo: undefined, // Resetado
     medications: [
       { name: "", dosage: "", frequency: "", duration: "", instructions: "" },
     ],
     observations: "",
   });
 
-  // Busca a lista de pacientes do médico atual
+  const [formData, setFormData] = useState<PrescriptionData>(
+    getInitialFormData()
+  );
+
+  // --- 5. FUNÇÕES DE BUSCA (HOOKS) ---
   useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    // Função para buscar pacientes
     const fetchPatients = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
       try {
         const q = query(
           collection(db, "patients"),
@@ -82,11 +118,9 @@ const PrescriptionForm: React.FC = () => {
         setError("Erro ao carregar lista de pacientes");
       }
     };
-    fetchPatients();
-    // Busca o nome completo do médico para incluir no topo da prescrição
-    const fetchDoctorName = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+
+    // Função para buscar dados do médico
+    const fetchDoctorData = async () => {
       try {
         const d = await getDoc(firestoreDoc(db, "doctors", user.uid));
         if (d.exists()) {
@@ -104,11 +138,34 @@ const PrescriptionForm: React.FC = () => {
           setDoctorName(user.displayName || "");
         }
       } catch (err) {
-        console.error("Erro ao buscar nome do médico:", err);
+        console.error("Erro ao buscar dados do médico:", err);
       }
     };
-    fetchDoctorName();
-  }, []);
+
+    // --- NOVA FUNÇÃO PARA BUSCAR AS CLÍNICAS ---
+    const fetchClinics = async () => {
+      try {
+        const clinicsRef = collection(db, "doctors", user.uid, "clinics");
+        // Se quiser ordenar: const q = query(clinicsRef, orderBy("name", "asc"));
+        const querySnapshot = await getDocs(clinicsRef);
+        const clinicsList = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Clinic[];
+        setClinics(clinicsList);
+      } catch (err) {
+        console.error("Erro ao buscar clínicas:", err);
+        // Não é um erro crítico, não precisa mostrar ao usuário
+      }
+    };
+
+    // Chama todas as funções de busca
+    fetchPatients();
+    fetchDoctorData();
+    fetchClinics();
+  }, []); // Executa apenas uma vez na montagem
+
+  // --- FUNÇÕES DE FILTRO E SELEÇÃO ---
 
   // Filtra pacientes por similaridade
   const filteredPatients = patients
@@ -128,6 +185,7 @@ const PrescriptionForm: React.FC = () => {
     .filter((p) => p.score > 0)
     .sort((a, b) => b.score - a.score);
 
+  // Seleciona o paciente da lista
   const handleSelectPatient = (patient: Patient) => {
     setFormData((prev) => ({
       ...prev,
@@ -136,6 +194,8 @@ const PrescriptionForm: React.FC = () => {
     }));
     setSearchTerm(patient.name + (patient.cpf ? ` - ${patient.cpf}` : ""));
   };
+
+  // --- FUNÇÕES DE MANIPULAÇÃO DO FORM ---
 
   const handleAddMedication = () => {
     setFormData((prev) => ({
@@ -167,29 +227,47 @@ const PrescriptionForm: React.FC = () => {
     }));
   };
 
+  // Limpa o formulário
+  const resetForm = () => {
+    setFormData(getInitialFormData());
+    setSearchTerm("");
+  };
+
+  // --- SUBMISSÃO PRINCIPAL ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+
     try {
       const user = auth.currentUser;
       if (!user) throw new Error("Usuário não autenticado");
+
+      // --- VALIDAÇÕES ---
+      if (!formData.clinicId)
+        throw new Error("Selecione um local de atendimento");
+
       if (!formData.patientId || !formData.patientName.trim())
         throw new Error("Selecione um paciente");
+
       if (formData.medications.length === 0)
         throw new Error("Adicione pelo menos um medicamento");
+
       formData.medications.forEach((med, i) => {
         if (!med.name || !med.dosage || !med.frequency)
           throw new Error(
             `Preencha os campos obrigatórios do medicamento ${i + 1}`
           );
       });
+
+      // --- SALVA NO FIRESTORE ---
       await addDoc(collection(db, "prescriptions"), {
-        ...formData,
+        ...formData, // O formData JÁ TEM clinicId e clinicInfo
         doctorId: user.uid,
         createdAt: serverTimestamp(),
       });
-      // Após salvar, perguntar ao usuário o que deseja fazer
+
+      // --- PERGUNTA O PRÓXIMO PASSO ---
       const result = await Swal.fire({
         title: "Prescrição salva",
         text: "Deseja baixar a prescrição ou registrar uma nova?",
@@ -202,57 +280,14 @@ const PrescriptionForm: React.FC = () => {
       });
 
       if (result.isConfirmed) {
-        await handleDownloadPDF(); // <-- AGORA espera terminar
-        setFormData({
-          patientId: "",
-          patientName: "",
-          medications: [
-            {
-              name: "",
-              dosage: "",
-              frequency: "",
-              duration: "",
-              instructions: "",
-            },
-          ],
-          observations: "",
-        });
-        setSearchTerm("");
+        await handleDownloadPDF();
+        resetForm(); // Limpa o form após baixar
       } else if (result.isDenied) {
-        // Baixar DOCX
         await handleDownloadDOC();
-        setFormData({
-          patientId: "",
-          patientName: "",
-          medications: [
-            {
-              name: "",
-              dosage: "",
-              frequency: "",
-              duration: "",
-              instructions: "",
-            },
-          ],
-          observations: "",
-        });
-        setSearchTerm("");
+        resetForm(); // Limpa o form após baixar
       } else {
-        // Registrar nova prescrição (limpar formulário e permanecer na página)
-        setFormData({
-          patientId: "",
-          patientName: "",
-          medications: [
-            {
-              name: "",
-              dosage: "",
-              frequency: "",
-              duration: "",
-              instructions: "",
-            },
-          ],
-          observations: "",
-        });
-        setSearchTerm("");
+        // (result.isDismissed) -> Clicou em "Registrar nova"
+        resetForm();
       }
     } catch (err) {
       setError(
@@ -263,15 +298,20 @@ const PrescriptionForm: React.FC = () => {
     }
   };
 
-  // Exportar PDF
-  // Exportar PDF
+  // --- FUNÇÕES DE EXPORTAÇÃO ---
+  // (Elas ainda usam o clinicInfo que está salvo no state,
+  // por isso os downloads ainda funcionarão com os dados da clínica)
+
   const handleDownloadPDF = async () => {
     const element = document.getElementById("prescription-content");
     if (!element) return;
 
-    await new Promise((resolve) => setTimeout(resolve, 100)); // pequena pausa
+    // --- ESTA É A MUDANÇA: Adiciona/Remove a classe ANTES de gerar o PDF ---
+    element.classList.add("exporting-pdf"); // Adiciona classe para mostrar a clínica
 
-    return html2pdf()
+    await new Promise((resolve) => setTimeout(resolve, 100)); // pausa para renderizar
+
+    const pdfPromise = html2pdf()
       .set({
         margin: [10, 10, 10, 10],
         filename: `${formData.patientName}_prescricao.pdf`,
@@ -281,92 +321,162 @@ const PrescriptionForm: React.FC = () => {
       })
       .from(element)
       .save();
+
+    await pdfPromise; // Espera o PDF salvar
+
+    element.classList.remove("exporting-pdf"); // Remove a classe depois
+    return pdfPromise;
   };
 
-  // Exportar DOCX
+  // Copie e cole esta função inteira sobre a sua versão antiga
   const handleDownloadDOC = async () => {
+    const { patientName, observations, clinicInfo } = formData;
+    const medications = formData.medications ?? [];
+
+    // --- 1. CORREÇÃO DA FUNÇÃO formatPhone ---
+    // A sua função estava retornando literais "$1", "$2"
+    const formatPhone = (phone: string) => {
+      if (!phone) return "";
+      // Remove non-digits and try to match
+      const match = phone.replace(/\D/g, "").match(/^(\d{2})(\d{5})(\d{4})$/);
+      // Use os grupos capturados (match[1], match[2], match[3])
+      return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone;
+    };
+
     const doc = new Document({
       sections: [
         {
           properties: {},
           children: [
+            // --- 2. CORREÇÃO DO CABEÇALHO COM QUEBRAS DE LINHA (break: 1) ---
             new Paragraph({
+              alignment: "center",
+              spacing: { after: 200 },
               children: [
-                new TextRun({ text: `${doctorName || ""}`, bold: true }),
-                new TextRun({ text: "\nMédico Responsável", break: 1 }),
+                // Info da Clínica (se existir)
+                ...(clinicInfo
+                  ? [
+                      new TextRun({
+                        text: clinicInfo.name,
+                        bold: true,
+                        size: 28,
+                      }),
+                      ...(clinicInfo.address
+                        ? [
+                            new TextRun({ break: 1 }), // Quebra de linha
+                            new TextRun({
+                              text: clinicInfo.address,
+                              size: 22,
+                            }),
+                          ]
+                        : []),
+                      ...(clinicInfo.phone
+                        ? [
+                            new TextRun({ break: 1 }), // Quebra de linha
+                            new TextRun({
+                              text: formatPhone(clinicInfo.phone),
+                              size: 22,
+                            }),
+                          ]
+                        : []),
+                      new TextRun({ break: 1 }), // Espaçamento (\n\n)
+                      new TextRun({ break: 1 }), // Espaçamento (\n\n)
+                    ]
+                  : []),
+
+                // Info do Doutor
                 new TextRun({
-                  text: `${
-                    doctorCrm
-                      ? `CRM ${doctorCrm}${
-                          doctorCrmUf ? `-${doctorCrmUf}` : ""
-                        }`
-                      : ""
-                  }`,
-                  break: 1,
-                }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "\nAssinatura: _________________________________",
-                  break: 1,
-                }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Paciente: ${formData.patientName}`,
+                  // A quebra de linha já foi tratada acima
+                  text: doctorName || "",
                   bold: true,
+                  size: 26,
                 }),
-              ],
-            }),
-            ...formData.medications.map(
-              (med, i) =>
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `Medicamento ${i + 1}: ${med.name}, Dosagem: ${
-                        med.dosage
-                      }, Frequência: ${med.frequency}, Duração: ${
-                        med.duration
-                      }`,
-                      break: 1,
-                    }),
-                    new TextRun({
-                      text: `Instruções: ${med.instructions}`,
-                      break: 1,
-                    }),
-                  ],
-                })
-            ),
-            new Paragraph({
-              children: [
+                new TextRun({ break: 1 }), // Quebra de linha
                 new TextRun({
-                  text: `Observações: ${formData.observations}`,
-                  break: 1,
-                }),
-              ],
-            }),
-            // Rodapé com assinatura do médico (espaço reservado)
-            new Paragraph({
-              children: [
-                new TextRun({ text: "\n" }),
-                new TextRun({ text: `${doctorName || ""}`, bold: true }),
-                new TextRun({
-                  text: `${
-                    doctorCrm
-                      ? `CRM ${doctorCrm}${
-                          doctorCrmUf ? `-${doctorCrmUf}` : ""
-                        }`
-                      : ""
+                  text: `CRM ${doctorCrm || ""}${
+                    doctorCrmUf ? `-${doctorCrmUf}` : ""
                   }`,
-                  break: 1,
+                  size: 22,
                 }),
+                ...(doctorPhone
+                  ? [
+                      new TextRun({ break: 1 }), // Quebra de linha
+                      new TextRun({
+                        text: `Tel: ${formatPhone(doctorPhone)}`,
+                        size: 22,
+                      }),
+                    ]
+                  : []),
+              ],
+            }),
+
+            // --- O RESTO DO DOCUMENTO (também corrigido) ---
+
+            new Paragraph({ text: "", spacing: { after: 300 } }),
+
+            // Paciente
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Paciente: `, bold: true }),
+                new TextRun(patientName || ""),
+              ],
+            }),
+
+            new Paragraph({ text: "", spacing: { after: 200 } }),
+
+            // Lista de medicamentos (corrigido com breaks)
+            ...medications.flatMap((med, i) => [
+              new Paragraph({
+                spacing: { after: 150 },
+                children: [
+                  new TextRun({
+                    text: `${i + 1}. ${med.name || ""} - ${med.dosage || ""}`,
+                    bold: true,
+                  }),
+                  new TextRun({ break: 1 }), // Quebra de linha
+                  new TextRun({
+                    text: `Frequência: ${med.frequency || ""}${
+                      med.duration ? ` | Duração: ${med.duration}` : ""
+                    }`,
+                  }),
+                  ...(med.instructions
+                    ? [
+                        new TextRun({ break: 1 }), // Quebra de linha
+                        new TextRun({
+                          text: `Instruções: ${med.instructions}`,
+                        }),
+                      ]
+                    : []),
+                ],
+              }),
+            ]),
+
+            // Observações (corrigido com breaks)
+            ...(observations
+              ? [
+                  new Paragraph({
+                    spacing: { before: 300 },
+                    children: [
+                      new TextRun({ text: "Observações:", bold: true }),
+                      new TextRun({ break: 1 }), // Quebra de linha
+                      new TextRun(observations),
+                    ],
+                  }),
+                ]
+              : []),
+
+            // Assinatura (corrigido com breaks)
+            new Paragraph({ text: "", spacing: { before: 800 } }),
+            new Paragraph({
+              alignment: "center",
+              children: [
+                new TextRun("____________________________________________"),
+                new TextRun({ break: 1 }), // Quebra de linha
+                new TextRun({ break: 1 }), // Quebra de linha
                 new TextRun({
-                  text: "\nAssinatura: _________________________________",
-                  break: 1,
+                  text: `${doctorName || ""} - CRM ${doctorCrm || ""}${
+                    doctorCrmUf ? `-${doctorCrmUf}` : ""
+                  }`,
                 }),
               ],
             }),
@@ -374,22 +484,25 @@ const PrescriptionForm: React.FC = () => {
         },
       ],
     });
+
     const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${formData.patientName}_prescricao.docx`);
+    saveAs(blob, `${patientName || "prescricao"}_prescricao.docx`);
   };
 
+  // --- RENDERIZAÇÃO (JSX) ---
   return (
     <div className="dashboard-layout">
       <Sidebar />
       <main className="main-content">
-        <Header />
+        <Header />{" "}
+        {/* userName é pego automaticamente pelo Header agora? Se não, passe a prop */}
         <div className="prescription-container">
           <h2>Nova Prescrição</h2>
           {error && <div className="error-message">{error}</div>}
 
           <form onSubmit={handleSubmit} className="prescription-form">
+            {/* Div que será usada para o PDF */}
             <div id="prescription-content">
-              {/* Cabeçalho da prescrição: médico e assinatura */}
               <div className="prescription-header">
                 <div className="doctor-info">
                   <strong>{doctorName || ""}</strong>
@@ -410,11 +523,49 @@ const PrescriptionForm: React.FC = () => {
                   </div>
                   <div className="doctor-title">Médico Responsável</div>
                 </div>
+
                 <div className="signature-area">
                   <div className="signature-label">Assinatura do Médico</div>
                   <div className="signature-box" />
                 </div>
               </div>
+
+              {/* --- CAMPO NOVO: SELETOR DE CLÍNICA --- */}
+              <div className="form-group">
+                <label>Local de Atendimento*</label>
+                <select
+                  value={formData.clinicId}
+                  onChange={(e) => {
+                    const clinicId = e.target.value;
+                    const selectedClinic = clinics.find(
+                      (c) => c.id === clinicId
+                    );
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      clinicId: clinicId,
+                      // Armazena a info para o PDF/DOCX
+                      clinicInfo: selectedClinic
+                        ? {
+                            name: selectedClinic.name,
+                            address: selectedClinic.address || "",
+                            phone: selectedClinic.phone || "",
+                          }
+                        : undefined,
+                    }));
+                  }}
+                  required
+                >
+                  <option value="">Selecione um local</option>
+                  {clinics.map((clinic) => (
+                    <option key={clinic.id} value={clinic.id}>
+                      {clinic.name}{" "}
+                      {clinic.address ? `(${clinic.address})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Autocomplete de pacientes */}
               <div className="form-group autocomplete">
                 <label>Paciente*</label>
@@ -424,11 +575,14 @@ const PrescriptionForm: React.FC = () => {
                   onChange={(e) => {
                     const value = e.target.value;
                     setSearchTerm(value);
-                    setFormData((prev) => ({
-                      ...prev,
-                      patientId: "",
-                      patientName: "",
-                    }));
+                    // Limpa o paciente selecionado se o usuário digitar
+                    if (formData.patientId) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        patientId: "",
+                        patientName: "",
+                      }));
+                    }
                   }}
                   placeholder="Digite o nome ou CPF"
                   autoComplete="off"
@@ -470,6 +624,7 @@ const PrescriptionForm: React.FC = () => {
                       )}
                     </div>
                     <div className="medication-grid">
+                      {/* Nome */}
                       <div className="form-group">
                         <label>Nome do Medicamento*</label>
                         <input
@@ -485,6 +640,7 @@ const PrescriptionForm: React.FC = () => {
                           required
                         />
                       </div>
+                      {/* Dosagem */}
                       <div className="form-group">
                         <label>Dosagem*</label>
                         <input
@@ -501,6 +657,7 @@ const PrescriptionForm: React.FC = () => {
                           required
                         />
                       </div>
+                      {/* Frequência */}
                       <div className="form-group">
                         <label>Frequência*</label>
                         <input
@@ -517,6 +674,7 @@ const PrescriptionForm: React.FC = () => {
                           required
                         />
                       </div>
+                      {/* Duração */}
                       <div className="form-group">
                         <label>Duração</label>
                         <input
@@ -532,6 +690,7 @@ const PrescriptionForm: React.FC = () => {
                           placeholder="Ex: 7 dias"
                         />
                       </div>
+                      {/* Instruções */}
                       <div className="form-group full-width">
                         <label>Instruções</label>
                         <textarea
@@ -579,28 +738,12 @@ const PrescriptionForm: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setFormData({
-                    patientId: "",
-                    patientName: "",
-                    medications: [
-                      {
-                        name: "",
-                        dosage: "",
-                        frequency: "",
-                        duration: "",
-                        instructions: "",
-                      },
-                    ],
-                    observations: "",
-                  });
-                  setSearchTerm("");
-
-                  Swal.fire({
-                    icon: "info",
-                    title: "Campos limpos",
-                    text: "Todos os campos foram redefinidos.",
-                    confirmButtonText: "Ok",
-                  });
+                  resetForm();
+                  Swal.fire(
+                    "Campos limpos",
+                    "Todos os campos foram redefinidos.",
+                    "info"
+                  );
                 }}
                 className="btn-secondary"
               >
@@ -614,17 +757,21 @@ const PrescriptionForm: React.FC = () => {
               >
                 {isSubmitting ? "Salvando..." : "Salvar Prescrição"}
               </button>
+
               <button
                 type="button"
                 onClick={handleDownloadPDF}
                 className="btn-secondary"
+                disabled={!formData.patientId} // Desabilita se não houver paciente
               >
                 Baixar PDF
               </button>
+
               <button
                 type="button"
                 onClick={handleDownloadDOC}
                 className="btn-secondary"
+                disabled={!formData.patientId} // Desabilita se não houver paciente
               >
                 Baixar DOCX
               </button>

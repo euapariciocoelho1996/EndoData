@@ -1,4 +1,5 @@
 import React from "react";
+import { HouseHeart } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -35,6 +36,7 @@ const defaultNavItems: NavItem[] = [
     path: "/prescriptions-recipes",
   },
   { icon: BarChart, label: "Relatórios", path: "/reports" },
+  { icon: HouseHeart, label: "Cadastrar Clínicas", path: "/clinics" },
 ];
 
 const supportNumbers = [

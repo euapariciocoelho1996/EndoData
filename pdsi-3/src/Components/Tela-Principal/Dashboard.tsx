@@ -12,9 +12,11 @@ import {
   Edit2,
 } from "lucide-react";
 import { auth, db } from "../../firebase";
+import { HouseHeart } from "lucide-react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import Header from "../Navegacao/Header";
 import Sidebar from "../Navegacao/Sidebar";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 const quickActions = [
   { icon: Users, label: "Paciente", path: "/PatientList" },
@@ -22,6 +24,7 @@ const quickActions = [
   { icon: BookMarked, label: "Receitas", path: "/new-recipe" },
   { icon: Calculator, label: "Calcular IMC", path: "/imc" },
   { icon: Calculator, label: "Calcular M. Basal", path: "/metabolismo-basal" },
+  { icon: HouseHeart, label: "Cadastrar Clínicas", path: "/clinics" },
 ];
 
 const mainNavCards = [
@@ -52,6 +55,13 @@ const mainNavCards = [
     description:
       "Realize cálculos de IMC, metabolismo basal e outras métricas importantes.",
     path: "/imc",
+  },
+  {
+    icon: BarChart,
+    title: "Cdastrar Clinicas",
+    description:
+      "Cadastre e gerencie informações das clínicas associadas ao seu consultório.",
+    path: "/clinics",
   },
 ];
 

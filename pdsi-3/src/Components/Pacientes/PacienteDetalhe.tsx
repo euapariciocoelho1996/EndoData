@@ -177,6 +177,7 @@ const PacienteDetalhe: React.FC = () => {
       };
 
       // Remover o id dos dados de atualização
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, ...dataToUpdate } = updateData;
 
       const patientDocRef = doc(db, "patients", patientId);

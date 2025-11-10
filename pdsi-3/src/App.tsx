@@ -14,7 +14,7 @@ import Reports from "./Components/Relatorios/Reports";
 import Agenda from "./Components/Agenda/Agenda";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
-
+import Clinics from "./Components/Clinicas/ClinicsForm";
 // Componente para proteger rotas que precisam de autenticação
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -146,6 +146,7 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route path="/clinics" element={<Clinics />} />
       </Routes>
     </BrowserRouter>
   );
