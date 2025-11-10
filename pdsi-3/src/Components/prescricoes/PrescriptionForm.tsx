@@ -42,7 +42,8 @@ type PrescriptionData = {
 
 const PrescriptionForm: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [patients, setPatients] = useState<Patient[]>([]);
