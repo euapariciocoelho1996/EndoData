@@ -88,6 +88,16 @@ const getInitials = (name: string) => {
   return `${first}${last}`.toUpperCase();
 };
 
+// Normaliza texto removendo acentos e convertendo para minúsculas
+const normalizeText = (text: string): string => {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+    .trim();
+};
+
 // --- COMPONENTE PRINCIPAL ---
 
 const PatientList: React.FC = () => {
@@ -142,12 +152,23 @@ const PatientList: React.FC = () => {
 
   // Lógica de filtro
   const filtered = patients.filter((p) => {
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      p.name.toLowerCase().includes(q) ||
-      (p.cpf || "").includes(q.replace(/\D/g, ""))
-    );
+    const searchTerm = search.trim();
+    if (!searchTerm) return true;
+
+    // Normaliza o termo de busca (remove acentos e converte para minúsculas)
+    const normalizedSearch = normalizeText(searchTerm);
+
+    // Busca por nome (normalizado)
+    const patientName = p.name || "";
+    const normalizedName = normalizeText(patientName);
+    const nameMatch = normalizedName.includes(normalizedSearch);
+
+    // Busca por CPF (remove todos os caracteres não numéricos)
+    const patientCpf = (p.cpf || "").replace(/\D/g, "");
+    const searchCpf = searchTerm.replace(/\D/g, "");
+    const cpfMatch = searchCpf.length > 0 && patientCpf.includes(searchCpf);
+
+    return nameMatch || cpfMatch;
   });
 
   // Lógica de paginação

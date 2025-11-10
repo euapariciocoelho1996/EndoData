@@ -760,7 +760,7 @@ const RecipeForm: React.FC = () => {
                         pharmacistName: e.target.value,
                       }))
                     }
-                    placeholder=""
+                    placeholder="Nome do farmacêutico responsável"
                   />
                 </div>
                 <div className="form-group">
